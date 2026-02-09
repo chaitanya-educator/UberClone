@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Password is required'],
         minlength: [6, 'Password must be at least 6 characters'],
-        select: false 
+        select: false // not allow password to be returned in queries by default
     },
     role: {
         type: String,
@@ -54,7 +54,7 @@ userSchema.pre('save', async function() {
         return;
     }
     // Hash password with bcrypt (10 salt rounds)
-    this.password = await bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password,10);
 });
 
 userSchema.methods.comparePassword = async function(candidatePassword) {
