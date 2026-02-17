@@ -2,7 +2,8 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.js';
 import authRoutes from './modules/auth/auth.routes.js';
-import profileRoutes from './modules/profile/profile.routes.js'
+import profileRoutes from './modules/profile/profile.routes.js';
+import driverRoutes from './modules/driver/driver.routes.js';
 
 
 const app = express();
