@@ -4,6 +4,7 @@ import { swaggerSpec } from './config/swagger.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
 import driverRoutes from './modules/driver/driver.routes.js';
+import journeyRoutes from './modules/journey/journey.routes.js';
 
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/driver",driverRoutes);
+app.use("/api/driver", driverRoutes);
+app.use("/api/journey", journeyRoutes);
 
 export default app;

@@ -36,17 +36,27 @@ const options = {
     tags: [
       {
         name: 'Authentication',
-        description: 'User authentication endpoints (signup and login)'
+        description: 'User signup and login endpoints'
       },
       {
         name: 'Profile',
         description: 'User profile management endpoints'
+      },
+      {
+        name: 'Driver',
+        description: 'Driver profile creation, update, status toggle, and completion tracking'
+      },
+      {
+        name: 'Journey',
+        description: 'Journey (ride) booking, status updates, history, and payment'
       }
     ]
   },
   apis: [
     './src/modules/auth/auth.controller.js',
-    './src/modules/profile/profile.controller.js'
+    './src/modules/profile/profile.controller.js',
+    './src/modules/driver/driver.controller.js',
+    './src/modules/journey/journey.controller.js'
   ]
 };
 
