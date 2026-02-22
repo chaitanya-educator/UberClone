@@ -1,5 +1,9 @@
 # Uber Clone
 
+## �  Walk-in Guide
+
+For a comprehensive walk-in guide, visit: [Walk-in Guide](https://www.notion.so/Walk-in-2cb51ba454ab8033bea7f05369a1cac2?source=copy_link)
+
 ## 📱 Project Overview
 
 This is a full-featured **Uber Clone** application built with modern web technologies. The project demonstrates a ride-sharing platform with features for user management, ride booking, and real-time updates.
