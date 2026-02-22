@@ -1,4 +1,5 @@
 import { driverService } from "./driver.service.js";
+import { kafkaService } from "../../services/kafka.service.js";
 
 // ============================================
 // DRIVER CONTROLLER - HTTP Request/Response Layer
@@ -385,6 +386,10 @@ export const updateStatus = async (req, res) => {
         const userId = req.user._id;
         const { isOnline } = req.body;
         const driver = await driverService.updateStatus(userId, isOnline);
+        
+        // Publish Kafka event: Driver Status Change
+        await kafkaService.publishDriverStatus(driver, isOnline);
+        
         res.status(200).json({
             success: true,
             data: driver,

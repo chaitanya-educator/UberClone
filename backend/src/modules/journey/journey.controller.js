@@ -1,4 +1,5 @@
 import { journeyService } from "./journey.service.js";
+import { kafkaService } from "../../services/kafka.service.js";
 
 /**
  * @swagger
@@ -196,6 +197,18 @@ export const createJourney = async (req, res) => {
         const userId = req.user._id;
         const journeyData = req.body;
         const journey = await journeyService.createJourney(userId, journeyData);
+        
+        // Publish Kafka event: Journey Requested
+        await kafkaService.publishJourneyRequested(journey);
+        
+        // Send notification to nearby drivers
+        await kafkaService.publishDriverNotification('broadcast', {
+            title: 'New Journey Request',
+            message: `New ${journey.vehicleType} ride from ${journey.pickup.address}`,
+            type: 'INFO',
+            data: { journeyId: journey._id.toString() }
+        });
+        
         res.status(201).json({
             success: true,
             data: journey,
@@ -259,6 +272,21 @@ export const acceptJourney = async (req, res) => {
         const { journeyId } = req.params;
         const driverId = req.user.driver._id;
         const journey = await journeyService.acceptJourney(journeyId, driverId);
+        
+        // Publish Kafka event: Journey Accepted
+        await kafkaService.publishJourneyAccepted(journey, req.user.driver);
+        
+        // Send notification to rider
+        await kafkaService.publishRiderNotification(journey.rider._id, {
+            title: 'Driver Assigned',
+            message: `${req.user.driver.userId.name} is on the way!`,
+            type: 'SUCCESS',
+            data: { 
+                journeyId: journey._id.toString(),
+                driverId: req.user.driver.userId._id.toString()
+            }
+        });
+        
         res.status(200).json({
             success: true,
             data: journey,
@@ -336,6 +364,20 @@ export const updateJourneyStatus = async (req, res) => {
         const { status } = req.body;
         const driverId = req.user.driver._id;
         const journey = await journeyService.updateJourneyStatus(journeyId, driverId, status);
+        
+        // Publish Kafka event based on status
+        if (status === 'STARTED') {
+            await kafkaService.publishJourneyStarted(journey);
+            
+            // Notify rider
+            await kafkaService.publishRiderNotification(journey.rider._id, {
+                title: 'Journey Started',
+                message: 'Your ride has started. Enjoy your journey!',
+                type: 'INFO',
+                data: { journeyId: journey._id.toString() }
+            });
+        }
+        
         res.status(200).json({
             success: true,
             data: journey,
@@ -423,6 +465,21 @@ export const completeJourney = async (req, res) => {
         const driverId = req.user.driver._id;
         const completionData = { actualFare, distance, duration };
         const journey = await journeyService.completeJourney(journeyId, driverId, completionData);
+        
+        // Publish Kafka event: Journey Completed
+        await kafkaService.publishJourneyCompleted(journey);
+        
+        // Notify rider
+        await kafkaService.publishRiderNotification(journey.rider._id, {
+            title: 'Journey Completed',
+            message: `Your journey is complete. Fare: ₹${journey.actualFare}`,
+            type: 'SUCCESS',
+            data: { 
+                journeyId: journey._id.toString(),
+                fare: journey.actualFare
+            }
+        });
+        
         res.status(200).json({
             success: true,
             data: journey,
@@ -504,6 +561,27 @@ export const cancelJourney = async (req, res) => {
         const { reason, cancelledBy } = req.body;
         const userId = req.user._id;
         const journey = await journeyService.cancelJourney(journeyId, userId, reason, cancelledBy);
+        
+        // Publish Kafka event: Journey Cancelled
+        await kafkaService.publishJourneyCancelled(journey);
+        
+        // Notify the other party
+        if (cancelledBy === 'RIDER' && journey.driver) {
+            await kafkaService.publishDriverNotification(journey.driver._id, {
+                title: 'Journey Cancelled',
+                message: `Rider cancelled the journey. Reason: ${reason}`,
+                type: 'WARNING',
+                data: { journeyId: journey._id.toString() }
+            });
+        } else if (cancelledBy === 'DRIVER' && journey.rider) {
+            await kafkaService.publishRiderNotification(journey.rider._id, {
+                title: 'Journey Cancelled',
+                message: `Driver cancelled the journey. Reason: ${reason}`,
+                type: 'WARNING',
+                data: { journeyId: journey._id.toString() }
+            });
+        }
+        
         res.status(200).json({
             success: true,
             data: journey,

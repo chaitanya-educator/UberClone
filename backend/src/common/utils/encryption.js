@@ -12,7 +12,9 @@ import { env } from '../../config/env.js';
 // ENCRYPTION ALGORITHM CONFIGURATION
 // ============================================
 const ALGORITHM = 'aes-256-cbc'; // Advanced Encryption Standard with 256-bit key
-const ENCRYPTION_KEY = env.ENCRYPTION_KEY || 'your-32-character-secret-key!!'; // Must be 32 characters for AES-256
+// Ensure the key is exactly 32 bytes by padding or truncating
+const rawKey = env.ENCRYPTION_KEY || 'your-32-character-secret-key!!';
+const ENCRYPTION_KEY = Buffer.from(rawKey.padEnd(32, '0').slice(0, 32), 'utf8');
 const IV_LENGTH = 16; // Initialization Vector length (16 bytes for AES)
 
 // ============================================
@@ -38,7 +40,7 @@ export const encrypt = (text) => {
     // Step 2: Create cipher object with our algorithm, key, and IV
     const cipher = crypto.createCipheriv(
         ALGORITHM,                                    // Algorithm: AES-256-CBC
-        Buffer.from(ENCRYPTION_KEY.slice(0, 32)),    // Key: First 32 chars of encryption key
+        ENCRYPTION_KEY,                               // Key: 32-byte encryption key
         iv                                            // IV: Random initialization vector
     );
 
@@ -77,7 +79,7 @@ export const decrypt = (encryptedText) => {
     // Step 2: Create decipher object with same algorithm, key, and IV
     const decipher = crypto.createDecipheriv(
         ALGORITHM,                                    // Same algorithm used for encryption
-        Buffer.from(ENCRYPTION_KEY.slice(0, 32)),    // Same key used for encryption
+        ENCRYPTION_KEY,                               // Same key used for encryption
         iv                                            // Same IV used for encryption
     );
 
